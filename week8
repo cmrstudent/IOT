@@ -1,57 +1,62 @@
-#include <DHT.h>  
+#include "ThingSpeak.h"
 #include <ESP8266WiFi.h>
-String apiKey = "UYK6QJGVZPSG5LF2";   //read 
-const char *ssid =  "Anuja"; 
-const char *pass =  "Anuja123";
-const char* server = "api.thingspeak.com";
-#define DHTPIN D3
- DHT dht(DHTPIN, DHT11);
+
+const char ssid[] = "349";
+const char pass[] = "12341234";
+
+int statusCode = 0;
 WiFiClient client;
- void setup() 
-{
+
+unsigned long counterChannelNumber = 3274999;
+const char * myCounterReadAPIKey = "BKZ7V3AMAZV3EEL1";
+
+const int FieldNumber1 = 1;
+const int FieldNumber2 = 2;
+
+void setup() {
   Serial.begin(115200);
-  delay(1000);
-  dht.begin();
-  Serial.println("Connecting to ");
-  Serial.println(ssid);
-  WiFi.begin(ssid, pass);
-  while (WiFi.status() != WL_CONNECTED) 
-  {
-    delay(500);
-    Serial.print(".");
+  WiFi.mode(WIFI_STA);
+  ThingSpeak.begin(client);
+}
+
+void loop() {
+
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.print("Connecting to ");
+    Serial.print(ssid);
+    Serial.println("----");
+
+    while (WiFi.status() != WL_CONNECTED) {
+      WiFi.begin(ssid, pass);
+      delay(5000);
+    }
+
+    Serial.println("Connected to Wi-Fi successfully");
   }
-Serial.println("");
-Serial.println("WiFi connected");
-}
-void loop() 
-{
- float h = dht.readHumidity();
- float t = dht.readTemperature();
- if (isnan(h) || isnan(t)) 
- {
-  Serial.println("Failed to read from DHT sensor!");
-  return;
- }
-if (client.connect(server,80))   //   "184.106.153.149" or api.thingspeak.com
-{                      
-  String postStr = apiKey;
-  postStr +="&field1=";
-  postStr += String(h);
-  postStr +="&field2=";
-  postStr += String(t);
-  postStr += "\r\n\r\n";
-  client.print("X-THINGSPEAKAPIKEY: "+apiKey+"\n");
-  client.print("Content-Length: ");
-  client.print(postStr.length());
-  client.print("\n\n");
-  client.print(postStr);
-  Serial.print("Temperature: ");
-  Serial.print(t);
-  Serial.print(" degrees Celcius, Humidity: ");
-  Serial.print(h);
-  Serial.println("%. Send to Thingspeak.");
-}
-  client.stop();
-  Serial.println("Waiting...");
-  delay(1000);
-}
+
+  // Read Temperature
+  long temp = ThingSpeak.readLongField(counterChannelNumber, FieldNumber1, myCounterReadAPIKey);
+  statusCode = ThingSpeak.getLastReadStatus();
+
+  if (statusCode == 200) {
+    Serial.print("Temperature: ");
+    Serial.println(temp);
+  } else {
+    Serial.println("Unable to read channel / No internet connection");
+  }
+
+  delay(100);
+
+  // Read Humidity
+  long humidity = ThingSpeak.readLongField(counterChannelNumber, FieldNumber2, myCounterReadAPIKey);
+  statusCode = ThingSpeak.getLastReadStatus();
+
+  if (statusCode == 200) {
+    Serial.print("Humidity: ");
+    Serial.println(humidity);
+  } else {
+    Serial.println("Unable to read channel / No internet connection");
+  }
+
+  delay(100);
+},IDHI CRT DHI
